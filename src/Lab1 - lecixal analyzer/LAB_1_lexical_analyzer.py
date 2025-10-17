@@ -8,8 +8,6 @@ class Scanner(Lexer):
         DOTADD, DOTSUB, DOTMUL, DOTDIV,
         ASSIGN, ADDASSIGN, SUBASSIGN, MULASSIGN, DIVASSIGN,
         LT, GT, LE, GE, NE, EQ,
-        LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE,
-        COLON, TRANSPOSE, COMMA, SEMI,
         IF, ELSE, FOR, WHILE,
         BREAK, CONTINUE, RETURN,
         EYE, ZEROS, ONES,
@@ -17,11 +15,14 @@ class Scanner(Lexer):
         ID, INTNUM, FLOATNUM, STRING
     }
 
+    # Literały – pojedyncze znaki traktowane jako tokeny
+    literals = { '(', ')', '[', ']', '{', '}', ':', '\'', ',', ';', "'" }
+
     # Ignorowane znaki
     ignore = ' \t'
     ignore_comment = r'\#.*'
 
-    # Zgodnie z regułami specyfikacji leksykalnej zaczynamy od bardziej szczegółowych tokenów (patrz lab1-intro.pdf slajd 4)
+    # Operatory przypisania
     ADDASSIGN = r'\+='
     SUBASSIGN = r'-='
     MULASSIGN = r'\*='
@@ -48,39 +49,25 @@ class Scanner(Lexer):
     LT = r'<'
     GT = r'>'
 
-    # Nawiasy
-    LPAREN   = r'\('
-    RPAREN   = r'\)'
-    LBRACKET = r'\['
-    RBRACKET = r'\]'
-    LBRACE   = r'\{'
-    RBRACE   = r'\}'
-
-    # Inne
-    COLON     = r':'
-    TRANSPOSE = r"\'"
-    COMMA     = r','
-    SEMI      = r';'
-
-    # Liczby zmiennoprzecinkowe (możliwe przypadki to: .5, 60., 1e3, 2.5E-2 itp.)
+    # Liczby zmiennoprzecinkowe (.5, 60., 1e3, 2.5E-2 itp.)
     @_(r'((\d+\.\d*)|(\.\d+))([eE][+-]?\d+)?|\d+[eE][+-]?\d+')
     def FLOATNUM(self, t):
         t.value = float(t.value)
         return t
 
-
+    # Liczby całkowite
     @_(r'\d+')
     def INTNUM(self, t):
         t.value = int(t.value)
         return t
 
     # Stringi
-    @_(r'\".*?\"|\'[^\']*\'')
+    @_(r'\"[^\n"]*\"')
     def STRING(self, t):
-        t.value = t.value[1:-1]  # usuń cudzysłowy
+        t.value = t.value[1:-1]
         return t
 
-    # Identyfikatory + słowa kluczowe
+    # Identyfikatory i słowa kluczowe
     ID = r'[a-zA-Z_][a-zA-Z_0-9]*'
     ID['if']       = IF
     ID['else']     = ELSE
@@ -94,12 +81,12 @@ class Scanner(Lexer):
     ID['ones']     = ONES
     ID['print']    = PRINT
 
-    # Ignorowanie symbolu nowej linii (dla poprawnych numerów linii)
+    # Nowe linie (dla numerów linii)
     @_(r'\n+')
     def ignore_newline(self, t):
         self.lineno += t.value.count('\n')
 
-    # Obsługa błędów (nieoczekiwanych znaków)
+    # Błędy leksykalne
     def error(self, t):
         print(f"Nieoczekiwany znak {t.value[0]!r} w linii {self.lineno}")
         self.index += 1
