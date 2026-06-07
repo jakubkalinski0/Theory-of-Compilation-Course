@@ -1,4 +1,4 @@
-# Theory of Compilation
+# Theory of Compilation Course
 
 A course project from AGH UST that builds a compiler and interpreter for a MATLAB-like matrix language. The work is split into five labs, each adding the next stage of the compilation pipeline.
 
